@@ -1,4 +1,5 @@
 use core::fmt;
+use counter::Counter;
 use std::collections::HashSet;
 
 pub const SIZE: usize = 9;
@@ -108,6 +109,63 @@ impl Puzzle {
         for (i, j) in Puzzle::get_rcb_indices(x, y) {
             self.candidates[j][i].remove(&value);
         }
+    }
+
+    pub fn get_all_group_indices() -> Vec<IndexSet> {
+        let all_row_indices = Puzzle::get_all_row_indices();
+        let all_column_indices = Puzzle::get_all_column_indices();
+        let all_box_indices = Puzzle::get_all_box_indices();
+
+        [all_row_indices, all_column_indices, all_box_indices].concat()
+    }
+
+    fn get_all_row_indices() -> Vec<IndexSet> {
+        let mut result: Vec<IndexSet> = Vec::new();
+        for y in 0..SIZE {
+            result.push(Puzzle::get_row_indices(y));
+        }
+
+        result
+    }
+    
+    fn get_all_column_indices() -> Vec<IndexSet> {
+        let mut result: Vec<IndexSet> = Vec::new();
+        for x in 0..SIZE {
+            result.push(Puzzle::get_column_indices(x));
+        }
+
+        result
+    }
+    
+    fn get_all_box_indices() -> Vec<IndexSet> {
+        let mut result: Vec<IndexSet> = Vec::new();
+        for y in (0..SIZE).step_by(BOX_SIZE) {
+            for x in (0..SIZE).step_by(BOX_SIZE) {
+                result.push(Puzzle::get_box_indices(x, y));
+            }
+        }
+
+        result
+    }
+
+    pub fn get_candidates_counter(&self, group: &IndexSet) -> Counter<u8> {
+        let mut counter = Counter::new();
+        for (x, y) in group {
+            counter.update(self.candidates[*y][*x].clone());
+        }
+
+        counter
+    }
+
+    pub fn get_candidates_indices_by_value(&self, value: u8, group: &IndexSet) -> IndexSet {
+        let mut result = IndexSet::new();
+        for (x, y) in group {
+            if self.candidates[*y][*x].contains(&value) {
+                result.insert((*x, *y));
+            }
+        }
+
+        result
     }
 }
 

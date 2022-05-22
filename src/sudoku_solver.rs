@@ -1,12 +1,23 @@
 use crate::puzzle::Puzzle;
 use crate::tech::single_candidate::SingleCandidate;
-use crate::tech::base_tech::ApplyTechnique;
+use crate::tech::hidden_single::HiddenSingle;
+use crate::tech::base_tech::Technique;
 
 
 fn solve(puzzle: &mut Puzzle){
+    let techs: Vec<Box<dyn Technique>> = vec![
+        Box::new(SingleCandidate) as Box<dyn Technique>,
+        Box::new(HiddenSingle) as _,
+    ];
+
     while !puzzle.check_if_solved() {
-        let progress = SingleCandidate.apply(puzzle);
+        let mut progress = false;
+        for tech in &techs {
+            progress = tech.apply(puzzle) || progress;
+        }
+
         if progress == false {
+            println!("No progress detected, stopping the solve");
             break;
         }
     }

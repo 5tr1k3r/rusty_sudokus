@@ -1,9 +1,9 @@
 use crate::puzzle::{Puzzle, SIZE};
-use crate::tech::base_tech::ApplyTechnique;
+use crate::tech::base_tech::Technique;
 
 pub struct SingleCandidate;
 
-impl ApplyTechnique for SingleCandidate {
+impl Technique for SingleCandidate {
     fn apply(&self, puzzle: &mut Puzzle) -> bool {
         println!("Applying SingleCandidate technique");
 

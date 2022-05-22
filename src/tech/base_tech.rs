@@ -1,5 +1,5 @@
 use crate::puzzle::Puzzle;
 
-pub trait ApplyTechnique {
+pub trait Technique {
     fn apply(&self, puzzle: &mut Puzzle) -> bool;
 }
