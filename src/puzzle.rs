@@ -1,0 +1,138 @@
+use core::fmt;
+use std::collections::HashSet;
+
+pub const SIZE: usize = 9;
+pub const BOX_SIZE: usize = 3;
+
+type NumSet = HashSet<u8>;
+type IndexSet = HashSet<(usize, usize)>;
+
+pub struct Puzzle {
+    grid: [[u8; SIZE]; SIZE],
+    pub candidates: [[HashSet<u8>; SIZE]; SIZE],
+}
+
+impl Puzzle {
+    fn new(grid: [[u8; SIZE]; SIZE]) -> Self {
+        let mut candidates: [[HashSet<u8>; SIZE]; SIZE] =
+            [(); SIZE].map(|_| [(); SIZE].map(|_| HashSet::new()));
+        for y in 0..SIZE {
+            for x in 0..SIZE {
+                if grid[y][x] == 0 {
+                    candidates[y][x] = Puzzle::get_candidates_for_cell(grid, x, y);
+                }
+            }
+        }
+
+        Self { grid, candidates }
+    }
+
+    pub fn from_string(puzzle_string: String) -> Self {
+        assert_eq!(puzzle_string.len(), SIZE * SIZE);
+        let mut grid: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
+        for (i, value) in puzzle_string.chars().enumerate() {
+            let x = i % SIZE;
+            let y = i / SIZE;
+            grid[y][x] = value.to_digit(10).expect("Not a digit!") as u8;
+        }
+
+        Puzzle::new(grid)
+    }
+
+    pub fn check_if_solved(&self) -> bool {
+        for row in self.grid {
+            if row.iter().any(|&x| x == 0) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn get_candidates_for_cell(grid: [[u8; SIZE]; SIZE], x: usize, y: usize) -> HashSet<u8> {
+        let all_values: HashSet<u8> = (0..(SIZE + 1) as u8).into_iter().collect();
+        let rcb: HashSet<u8> = Puzzle::get_rcb(grid, x, y);
+
+        &all_values - &rcb
+    }
+
+    fn get_rcb(grid: [[u8; SIZE]; SIZE], x: usize, y: usize) -> HashSet<u8> {
+        let mut rcb_values = NumSet::new();
+        for (i, j) in Puzzle::get_rcb_indices(x, y) {
+            rcb_values.insert(grid[j][i]);
+        }
+
+        rcb_values
+    }
+
+    fn get_rcb_indices(x: usize, y: usize) -> IndexSet {
+        let row_indices = Puzzle::get_row_indices(y);
+        let column_indices = Puzzle::get_column_indices(x);
+        let box_indices = Puzzle::get_box_indices(x, y);
+
+        let rowcol = &row_indices | &column_indices;
+
+        &rowcol | &box_indices
+    }
+
+    fn get_row_indices(y: usize) -> IndexSet {
+        (0..SIZE).map(|x| (x, y)).collect()
+    }
+
+    fn get_column_indices(x: usize) -> IndexSet {
+        (0..SIZE).map(|y| (x, y)).collect()
+    }
+
+    fn get_box_indices(x: usize, y: usize) -> IndexSet {
+        let (box_x, box_y) = Puzzle::get_box_base_index(x, y);
+
+        (box_x..box_x + BOX_SIZE)
+            .flat_map(|i| (box_y..box_y + BOX_SIZE)
+            .map(move |j| (i, j)))
+            .collect()
+    }
+
+    fn get_box_base_index(x: usize, y: usize) -> (usize, usize) {
+        (x - x % BOX_SIZE, y - y % BOX_SIZE)
+    }
+
+    pub fn assign_value_to_cell(&mut self, value: u8, x: usize, y: usize) {
+        println!("  found {} at position {}, {}", value, x, y);
+
+        self.grid[y][x] = value;
+        self.remove_candidate_from_rcb(value, x, y);
+        self.candidates[y][x] = NumSet::new();
+    }
+
+    fn remove_candidate_from_rcb(&mut self, value: u8, x: usize, y: usize) {
+        for (i, j) in Puzzle::get_rcb_indices(x, y) {
+            self.candidates[j][i].remove(&value);
+        }
+    }
+}
+
+impl fmt::Debug for Puzzle {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\n").expect("Couldn't write newline!");
+        for y in 0..SIZE {
+            for x in 0..SIZE {
+                write!(f, "{} ", self.grid[y][x]).expect("Couldn't write a cell");
+            }
+            write!(f, "\n").expect("Couldn't write newline!");
+        }
+
+        write!(f, "")
+    }
+}
+
+#[allow(dead_code)]
+pub fn run() {
+    println!("Hello, you are running the puzzle module!");
+    let pstring: String =
+        "030072001000030090518000003050203100000705306000640205200060014007000630000008900"
+            .to_string();
+
+    let my_puzzle = Puzzle::from_string(pstring);
+
+    dbg!(my_puzzle.candidates);
+}
