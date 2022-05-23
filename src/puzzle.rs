@@ -170,6 +170,37 @@ impl Puzzle {
 
         result
     }
+
+    fn get_values_by_group_indices(&self, group_indices: Vec<IndexSet>) -> Vec<NumSet> {
+        let mut result: Vec<NumSet> = Vec::new();
+        for group in group_indices {
+            let mut numset = NumSet::new();
+            for (x, y) in group {
+                numset.insert(self.grid[y][x]);
+            }
+            result.push(numset);
+        }
+
+        result
+    }
+
+    fn get_all_rows(&self) -> Vec<NumSet> {
+        self.get_values_by_group_indices(Puzzle::get_all_row_indices())
+    }
+
+    fn get_all_columns(&self) -> Vec<NumSet> {
+        self.get_values_by_group_indices(Puzzle::get_all_column_indices())
+    }
+
+    fn get_all_boxes(&self) -> Vec<NumSet> {
+        self.get_values_by_group_indices(Puzzle::get_all_box_indices())
+    }
+
+    pub fn validate_solution(&self) -> bool {
+        let all_groups: Vec<NumSet> = [self.get_all_rows(), self.get_all_columns(), self.get_all_boxes()].concat();
+
+        all_groups.iter().all(|x| x.len() == SIZE)
+    }
 }
 
 impl fmt::Debug for Puzzle {
