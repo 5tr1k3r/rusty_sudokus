@@ -1,14 +1,14 @@
 use crate::config::SOLVE_OUTPUT_ENABLED;
+use ahash::AHashSet;
 use cached::proc_macro::cached;
 use core::fmt;
 use counter::Counter;
-use std::collections::HashSet;
 
 pub const SIZE: usize = 9;
 pub const BOX_SIZE: usize = 3;
 
-type NumSet = HashSet<u8>;
-type IndexSet = HashSet<(usize, usize)>;
+type NumSet = AHashSet<u8>;
+type IndexSet = AHashSet<(usize, usize)>;
 type Grid = [[u8; SIZE]; SIZE];
 type Candidates = [[NumSet; SIZE]; SIZE];
 
@@ -93,10 +93,9 @@ fn get_all_box_indices() -> Vec<IndexSet> {
     result
 }
 
-
 impl Puzzle {
     fn new(grid: Grid) -> Self {
-        let mut candidates: Candidates = [(); SIZE].map(|_| [(); SIZE].map(|_| HashSet::new()));
+        let mut candidates: Candidates = [(); SIZE].map(|_| [(); SIZE].map(|_| AHashSet::new()));
         for y in 0..SIZE {
             for x in 0..SIZE {
                 if grid[y][x] == 0 {
