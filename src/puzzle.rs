@@ -7,16 +7,17 @@ pub const BOX_SIZE: usize = 3;
 
 type NumSet = HashSet<u8>;
 type IndexSet = HashSet<(usize, usize)>;
+type Grid = [[u8; SIZE]; SIZE];
+type Candidates = [[NumSet; SIZE]; SIZE];
 
 pub struct Puzzle {
-    grid: [[u8; SIZE]; SIZE],
-    pub candidates: [[HashSet<u8>; SIZE]; SIZE],
+    grid: Grid,
+    pub candidates: Candidates,
 }
 
 impl Puzzle {
-    fn new(grid: [[u8; SIZE]; SIZE]) -> Self {
-        let mut candidates: [[HashSet<u8>; SIZE]; SIZE] =
-            [(); SIZE].map(|_| [(); SIZE].map(|_| HashSet::new()));
+    fn new(grid: Grid) -> Self {
+        let mut candidates: Candidates = [(); SIZE].map(|_| [(); SIZE].map(|_| HashSet::new()));
         for y in 0..SIZE {
             for x in 0..SIZE {
                 if grid[y][x] == 0 {
@@ -30,7 +31,7 @@ impl Puzzle {
 
     pub fn from_string(puzzle_string: String) -> Self {
         assert_eq!(puzzle_string.len(), SIZE * SIZE);
-        let mut grid: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
+        let mut grid: Grid = [[0; SIZE]; SIZE];
         for (i, value) in puzzle_string.chars().enumerate() {
             let x = i % SIZE;
             let y = i / SIZE;
@@ -50,14 +51,14 @@ impl Puzzle {
         true
     }
 
-    fn get_candidates_for_cell(grid: [[u8; SIZE]; SIZE], x: usize, y: usize) -> HashSet<u8> {
-        let all_values: HashSet<u8> = (0..(SIZE + 1) as u8).into_iter().collect();
-        let rcb: HashSet<u8> = Puzzle::get_rcb(grid, x, y);
+    fn get_candidates_for_cell(grid: Grid, x: usize, y: usize) -> NumSet {
+        let all_values: NumSet = (0..(SIZE + 1) as u8).into_iter().collect();
+        let rcb: NumSet = Puzzle::get_rcb(grid, x, y);
 
         &all_values - &rcb
     }
 
-    fn get_rcb(grid: [[u8; SIZE]; SIZE], x: usize, y: usize) -> HashSet<u8> {
+    fn get_rcb(grid: Grid, x: usize, y: usize) -> NumSet {
         let mut rcb_values = NumSet::new();
         for (i, j) in Puzzle::get_rcb_indices(x, y) {
             rcb_values.insert(grid[j][i]);
@@ -88,8 +89,7 @@ impl Puzzle {
         let (box_x, box_y) = Puzzle::get_box_base_index(x, y);
 
         (box_x..box_x + BOX_SIZE)
-            .flat_map(|i| (box_y..box_y + BOX_SIZE)
-            .map(move |j| (i, j)))
+            .flat_map(|i| (box_y..box_y + BOX_SIZE).map(move |j| (i, j)))
             .collect()
     }
 
@@ -127,7 +127,7 @@ impl Puzzle {
 
         result
     }
-    
+
     fn get_all_column_indices() -> Vec<IndexSet> {
         let mut result: Vec<IndexSet> = Vec::new();
         for x in 0..SIZE {
@@ -136,7 +136,7 @@ impl Puzzle {
 
         result
     }
-    
+
     fn get_all_box_indices() -> Vec<IndexSet> {
         let mut result: Vec<IndexSet> = Vec::new();
         for y in (0..SIZE).step_by(BOX_SIZE) {
