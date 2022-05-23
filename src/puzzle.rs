@@ -30,7 +30,7 @@ impl Puzzle {
         Self { grid, candidates }
     }
 
-    pub fn from_string(puzzle_string: String) -> Self {
+    pub fn from_string(puzzle_string: &String) -> Self {
         assert_eq!(puzzle_string.len(), SIZE * SIZE);
         let mut grid: Grid = [[0; SIZE]; SIZE];
         for (i, value) in puzzle_string.chars().enumerate() {
@@ -224,7 +224,7 @@ pub fn run() {
         "030072001000030090518000003050203100000705306000640205200060014007000630000008900"
             .to_string();
 
-    let my_puzzle = Puzzle::from_string(pstring);
+    let my_puzzle = Puzzle::from_string(&pstring);
 
     dbg!(my_puzzle.candidates);
 }

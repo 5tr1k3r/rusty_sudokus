@@ -6,7 +6,7 @@ use crate::tech::single_candidate::SingleCandidate;
 use std::fs;
 use std::time::Instant;
 
-fn solve(puzzle: &mut Puzzle) -> bool {
+pub fn solve(puzzle: &mut Puzzle) -> bool {
     let techs: Vec<Box<dyn Technique>> = vec![
         Box::new(SingleCandidate) as Box<dyn Technique>,
         Box::new(HiddenSingle) as _,
@@ -36,8 +36,8 @@ fn solve(puzzle: &mut Puzzle) -> bool {
     is_validated
 }
 
-fn batch_solve(filename: String) {
-    let all_puzzles_string = fs::read_to_string(&filename).expect("File reading error");
+pub fn batch_solve(filename: &String) {
+    let all_puzzles_string = fs::read_to_string(filename).expect("File reading error");
     let all_puzzles = all_puzzles_string.lines();
 
     let mut total_count = 0;
@@ -45,7 +45,7 @@ fn batch_solve(filename: String) {
     let time_start = Instant::now();
 
     for puzzle_string in all_puzzles {
-        let mut puzzle = Puzzle::from_string(puzzle_string.to_string());
+        let mut puzzle = Puzzle::from_string(&puzzle_string.to_string());
 
         total_count += 1;
         if !solve(&mut puzzle) {
@@ -55,7 +55,7 @@ fn batch_solve(filename: String) {
 
     let time_taken = time_start.elapsed().as_secs_f64();
 
-    let result_string = construct_result_string(&filename, total_count, unsolved_count, time_taken);
+    let result_string = construct_result_string(filename, total_count, unsolved_count, time_taken);
     println!("{}", result_string);
 }
 
@@ -68,7 +68,7 @@ fn batch_solve_everything() {
         "batches/5.txt",
     ];
     for file in files {
-        batch_solve(file.to_string());
+        batch_solve(&file.to_string());
     }
 }
 
@@ -83,8 +83,8 @@ fn construct_result_string(
     let unsolved_rate: f32 = unsolved_count as f32 / total_count as f32;
 
     output.push(format!(
-        "Total: {}, unsolved: {} ({}), took {}s",
-        total_count, unsolved_count, unsolved_rate, time_taken
+        "Total: {}, unsolved: {} ({:.1}%), took {}s",
+        total_count, unsolved_count, unsolved_rate * 100.0, time_taken
     ));
 
     output.join("\n")
@@ -106,7 +106,7 @@ fn notify_solution_invalid() {
     println!("Solution is invalid!");
 }
 
-pub fn run() {
+pub fn run_default() {
     // let pstring: String =
     //     "030072001000030090518000003050203100000705306000640205200060014007000630000008900"
     //         .to_string();
@@ -117,5 +117,11 @@ pub fn run() {
     // dbg!(my_puzzle);
 
     // batch_solve("batches/5.txt".to_string());
-    batch_solve_everything();
+    // batch_solve_everything();
+
+    println!("Available commands:");
+    println!("  -p <puzzle_string>     Solve a puzzle. Input: puzzle string.");
+    println!("  Example: -p 030072001000030090518000003050203100000705306000640205200060014007000630000008900\n");
+    println!("  -b <filename>          Solve a batch with puzzles. Input: filename.");
+    println!("  Example: -b 0.txt");
 }

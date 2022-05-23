@@ -3,6 +3,42 @@ mod puzzle;
 mod sudoku_solver;
 mod tech;
 
+use crate::puzzle::Puzzle;
+use crate::sudoku_solver::{batch_solve, solve};
+use std::env;
+
+fn start_puzzle_solving_mode(puzzle_string: &String) {
+    println!("Puzzle solving mode");
+    let mut my_puzzle = Puzzle::from_string(puzzle_string);
+
+    solve(&mut my_puzzle);
+
+    dbg!(my_puzzle);
+}
+
+fn start_batch_solving_mode(filename: &String) {
+    println!("Batch solving mode");
+    batch_solve(filename);
+}
+
 fn main() {
-    sudoku_solver::run();
+    let args: Vec<String> = env::args().collect();
+    let optional_args = &args[1..];
+    if optional_args.is_empty() {
+        sudoku_solver::run_default();
+        return;
+    } else if optional_args.len() != 2 {
+        panic!("Need exactly two arguments");
+    }
+
+    let mode = &optional_args[0];
+    let object = &optional_args[1];
+
+    if mode == "-p" {
+        start_puzzle_solving_mode(object)
+    } else if mode == "-b" {
+        start_batch_solving_mode(object)
+    } else {
+        panic!("Unexpected argument(s)");
+    }
 }
