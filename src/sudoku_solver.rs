@@ -1,3 +1,4 @@
+use crate::config::SOLVE_OUTPUT_ENABLED;
 use crate::puzzle::Puzzle;
 use crate::tech::single_candidate::SingleCandidate;
 use crate::tech::hidden_single::HiddenSingle;
@@ -13,11 +14,16 @@ fn solve(puzzle: &mut Puzzle){
     while !puzzle.check_if_solved() {
         let mut progress = false;
         for tech in &techs {
+            if SOLVE_OUTPUT_ENABLED {
+                println!("Applying {} technique", tech.get_name());
+            }
             progress = tech.apply(puzzle) || progress;
         }
 
         if progress == false {
-            println!("No progress detected, stopping the solve");
+            if SOLVE_OUTPUT_ENABLED {
+                println!("No progress detected, stopping the solve");
+            }
             break;
         }
     }

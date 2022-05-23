@@ -4,9 +4,11 @@ use crate::tech::base_tech::Technique;
 pub struct SingleCandidate;
 
 impl Technique for SingleCandidate {
-    fn apply(&self, puzzle: &mut Puzzle) -> bool {
-        println!("Applying SingleCandidate technique");
+    fn get_name(&self) -> &str {
+        "SingleCandidate"
+    }
 
+    fn apply(&self, puzzle: &mut Puzzle) -> bool {
         let mut is_progress: bool = false;
 
         for y in 0..SIZE {

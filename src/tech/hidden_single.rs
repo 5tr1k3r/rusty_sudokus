@@ -4,9 +4,11 @@ use crate::tech::base_tech::Technique;
 pub struct HiddenSingle;
 
 impl Technique for HiddenSingle {
-    fn apply(&self, puzzle: &mut Puzzle) -> bool {
-        println!("Applying HiddenSingle technique");
+    fn get_name(&self) -> &str {
+        "HiddenSingle"
+    }
 
+    fn apply(&self, puzzle: &mut Puzzle) -> bool {
         let mut is_progress: bool = false;
 
         for group in Puzzle::get_all_group_indices() {

@@ -1,6 +1,7 @@
 use core::fmt;
 use counter::Counter;
 use std::collections::HashSet;
+use crate::config::SOLVE_OUTPUT_ENABLED;
 
 pub const SIZE: usize = 9;
 pub const BOX_SIZE: usize = 3;
@@ -98,7 +99,9 @@ impl Puzzle {
     }
 
     pub fn assign_value_to_cell(&mut self, value: u8, x: usize, y: usize) {
-        println!("  found {} at position {}, {}", value, x, y);
+        if SOLVE_OUTPUT_ENABLED {
+            println!("  found {} at position {}, {}", value, x, y);
+        }
 
         self.grid[y][x] = value;
         self.remove_candidate_from_rcb(value, x, y);
