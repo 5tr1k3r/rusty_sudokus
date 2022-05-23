@@ -1,4 +1,4 @@
-use crate::puzzle::Puzzle;
+use crate::puzzle::{Puzzle, get_all_group_indices};
 use crate::tech::base_tech::Technique;
 
 pub struct HiddenSingle;
@@ -11,7 +11,7 @@ impl Technique for HiddenSingle {
     fn apply(&self, puzzle: &mut Puzzle) -> bool {
         let mut is_progress: bool = false;
 
-        for group in Puzzle::get_all_group_indices() {
+        for group in get_all_group_indices() {
             let counter = puzzle.get_candidates_counter(&group);
 
             for (value, count) in counter {

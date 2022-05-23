@@ -1,7 +1,8 @@
+use crate::config::SOLVE_OUTPUT_ENABLED;
+use cached::proc_macro::cached;
 use core::fmt;
 use counter::Counter;
 use std::collections::HashSet;
-use crate::config::SOLVE_OUTPUT_ENABLED;
 
 pub const SIZE: usize = 9;
 pub const BOX_SIZE: usize = 3;
@@ -15,6 +16,83 @@ pub struct Puzzle {
     grid: Grid,
     pub candidates: Candidates,
 }
+
+#[cached]
+fn get_box_base_index(x: usize, y: usize) -> (usize, usize) {
+    (x - x % BOX_SIZE, y - y % BOX_SIZE)
+}
+
+#[cached]
+fn get_rcb_indices(x: usize, y: usize) -> IndexSet {
+    let row_indices = get_row_indices(y);
+    let column_indices = get_column_indices(x);
+    let box_indices = get_box_indices(x, y);
+
+    let rowcol = &row_indices | &column_indices;
+
+    &rowcol | &box_indices
+}
+
+#[cached]
+fn get_row_indices(y: usize) -> IndexSet {
+    (0..SIZE).map(|x| (x, y)).collect()
+}
+
+#[cached]
+fn get_column_indices(x: usize) -> IndexSet {
+    (0..SIZE).map(|y| (x, y)).collect()
+}
+
+#[cached]
+fn get_box_indices(x: usize, y: usize) -> IndexSet {
+    let (box_x, box_y) = get_box_base_index(x, y);
+
+    (box_x..box_x + BOX_SIZE)
+        .flat_map(|i| (box_y..box_y + BOX_SIZE).map(move |j| (i, j)))
+        .collect()
+}
+
+#[cached]
+pub fn get_all_group_indices() -> Vec<IndexSet> {
+    let all_row_indices = get_all_row_indices();
+    let all_column_indices = get_all_column_indices();
+    let all_box_indices = get_all_box_indices();
+
+    [all_row_indices, all_column_indices, all_box_indices].concat()
+}
+
+#[cached]
+fn get_all_row_indices() -> Vec<IndexSet> {
+    let mut result: Vec<IndexSet> = Vec::new();
+    for y in 0..SIZE {
+        result.push(get_row_indices(y));
+    }
+
+    result
+}
+
+#[cached]
+fn get_all_column_indices() -> Vec<IndexSet> {
+    let mut result: Vec<IndexSet> = Vec::new();
+    for x in 0..SIZE {
+        result.push(get_column_indices(x));
+    }
+
+    result
+}
+
+#[cached]
+fn get_all_box_indices() -> Vec<IndexSet> {
+    let mut result: Vec<IndexSet> = Vec::new();
+    for y in (0..SIZE).step_by(BOX_SIZE) {
+        for x in (0..SIZE).step_by(BOX_SIZE) {
+            result.push(get_box_indices(x, y));
+        }
+    }
+
+    result
+}
+
 
 impl Puzzle {
     fn new(grid: Grid) -> Self {
@@ -61,41 +139,11 @@ impl Puzzle {
 
     fn get_rcb(grid: Grid, x: usize, y: usize) -> NumSet {
         let mut rcb_values = NumSet::new();
-        for (i, j) in Puzzle::get_rcb_indices(x, y) {
+        for (i, j) in get_rcb_indices(x, y) {
             rcb_values.insert(grid[j][i]);
         }
 
         rcb_values
-    }
-
-    fn get_rcb_indices(x: usize, y: usize) -> IndexSet {
-        let row_indices = Puzzle::get_row_indices(y);
-        let column_indices = Puzzle::get_column_indices(x);
-        let box_indices = Puzzle::get_box_indices(x, y);
-
-        let rowcol = &row_indices | &column_indices;
-
-        &rowcol | &box_indices
-    }
-
-    fn get_row_indices(y: usize) -> IndexSet {
-        (0..SIZE).map(|x| (x, y)).collect()
-    }
-
-    fn get_column_indices(x: usize) -> IndexSet {
-        (0..SIZE).map(|y| (x, y)).collect()
-    }
-
-    fn get_box_indices(x: usize, y: usize) -> IndexSet {
-        let (box_x, box_y) = Puzzle::get_box_base_index(x, y);
-
-        (box_x..box_x + BOX_SIZE)
-            .flat_map(|i| (box_y..box_y + BOX_SIZE).map(move |j| (i, j)))
-            .collect()
-    }
-
-    fn get_box_base_index(x: usize, y: usize) -> (usize, usize) {
-        (x - x % BOX_SIZE, y - y % BOX_SIZE)
     }
 
     pub fn assign_value_to_cell(&mut self, value: u8, x: usize, y: usize) {
@@ -109,46 +157,9 @@ impl Puzzle {
     }
 
     fn remove_candidate_from_rcb(&mut self, value: u8, x: usize, y: usize) {
-        for (i, j) in Puzzle::get_rcb_indices(x, y) {
+        for (i, j) in get_rcb_indices(x, y) {
             self.candidates[j][i].remove(&value);
         }
-    }
-
-    pub fn get_all_group_indices() -> Vec<IndexSet> {
-        let all_row_indices = Puzzle::get_all_row_indices();
-        let all_column_indices = Puzzle::get_all_column_indices();
-        let all_box_indices = Puzzle::get_all_box_indices();
-
-        [all_row_indices, all_column_indices, all_box_indices].concat()
-    }
-
-    fn get_all_row_indices() -> Vec<IndexSet> {
-        let mut result: Vec<IndexSet> = Vec::new();
-        for y in 0..SIZE {
-            result.push(Puzzle::get_row_indices(y));
-        }
-
-        result
-    }
-
-    fn get_all_column_indices() -> Vec<IndexSet> {
-        let mut result: Vec<IndexSet> = Vec::new();
-        for x in 0..SIZE {
-            result.push(Puzzle::get_column_indices(x));
-        }
-
-        result
-    }
-
-    fn get_all_box_indices() -> Vec<IndexSet> {
-        let mut result: Vec<IndexSet> = Vec::new();
-        for y in (0..SIZE).step_by(BOX_SIZE) {
-            for x in (0..SIZE).step_by(BOX_SIZE) {
-                result.push(Puzzle::get_box_indices(x, y));
-            }
-        }
-
-        result
     }
 
     pub fn get_candidates_counter(&self, group: &IndexSet) -> Counter<u8> {
@@ -185,19 +196,24 @@ impl Puzzle {
     }
 
     fn get_all_rows(&self) -> Vec<NumSet> {
-        self.get_values_by_group_indices(Puzzle::get_all_row_indices())
+        self.get_values_by_group_indices(get_all_row_indices())
     }
 
     fn get_all_columns(&self) -> Vec<NumSet> {
-        self.get_values_by_group_indices(Puzzle::get_all_column_indices())
+        self.get_values_by_group_indices(get_all_column_indices())
     }
 
     fn get_all_boxes(&self) -> Vec<NumSet> {
-        self.get_values_by_group_indices(Puzzle::get_all_box_indices())
+        self.get_values_by_group_indices(get_all_box_indices())
     }
 
     pub fn validate_solution(&self) -> bool {
-        let all_groups: Vec<NumSet> = [self.get_all_rows(), self.get_all_columns(), self.get_all_boxes()].concat();
+        let all_groups: Vec<NumSet> = [
+            self.get_all_rows(),
+            self.get_all_columns(),
+            self.get_all_boxes(),
+        ]
+        .concat();
 
         all_groups.iter().all(|x| x.len() == SIZE)
     }
