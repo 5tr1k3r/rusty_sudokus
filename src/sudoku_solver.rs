@@ -3,6 +3,7 @@ use crate::puzzle::Puzzle;
 use crate::tech::base_tech::Technique;
 use crate::tech::hidden_single::HiddenSingle;
 use crate::tech::single_candidate::SingleCandidate;
+use rayon::prelude::*;
 use std::fs;
 use std::time::Instant;
 
@@ -36,22 +37,22 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
     is_validated
 }
 
-pub fn batch_solve(filename: &String) {
-    let all_puzzles_string = fs::read_to_string(filename).expect("File reading error");
-    let all_puzzles = all_puzzles_string.lines();
+fn solve_puzzle_by_string(puzzle_string: &str) -> bool {
+    let mut puzzle = Puzzle::from_string(&puzzle_string.to_string());
+    solve(&mut puzzle)
+}
 
-    let mut total_count = 0;
-    let mut unsolved_count = 0;
+pub fn batch_solve(filename: &String) {
+    let all_puzzles = fs::read_to_string(filename).expect("File reading error");
+
     let time_start = Instant::now();
 
-    for puzzle_string in all_puzzles {
-        let mut puzzle = Puzzle::from_string(&puzzle_string.to_string());
-
-        total_count += 1;
-        if !solve(&mut puzzle) {
-            unsolved_count += 1;
-        }
-    }
+    let total_count: usize = all_puzzles.lines().count();
+    let unsolved_count: usize = all_puzzles
+        .par_lines()
+        .map(|pstring| solve_puzzle_by_string(pstring))
+        .filter(|x| !x)
+        .count();
 
     let time_taken = time_start.elapsed().as_secs_f64();
 
@@ -75,8 +76,8 @@ fn batch_solve_everything() {
 
 fn construct_result_string(
     filename: &String,
-    total_count: u32,
-    unsolved_count: u32,
+    total_count: usize,
+    unsolved_count: usize,
     time_taken: f64,
 ) -> String {
     let mut output: Vec<String> = vec![format!("{}", filename)];
@@ -85,7 +86,10 @@ fn construct_result_string(
 
     output.push(format!(
         "Total: {}, unsolved: {} ({:.1}%), took {}s",
-        total_count, unsolved_count, unsolved_rate * 100.0, time_taken
+        total_count,
+        unsolved_count,
+        unsolved_rate * 100.0,
+        time_taken
     ));
 
     output.join("\n")
