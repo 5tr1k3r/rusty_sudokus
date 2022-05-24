@@ -59,6 +59,7 @@ pub fn batch_solve(filename: &String) {
     println!("{}", result_string);
 }
 
+#[allow(dead_code)]
 fn batch_solve_everything() {
     let files = [
         "batches/0.txt",
