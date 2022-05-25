@@ -119,14 +119,8 @@ impl Puzzle {
         Puzzle::new(grid)
     }
 
-    pub fn check_if_solved(&self) -> bool {
-        for row in self.grid {
-            if row.iter().any(|&x| x == 0) {
-                return false;
-            }
-        }
-
-        true
+    pub fn is_solved(&self) -> bool {
+        !self.grid.iter().flatten().any(|&x| x == 0)
     }
 
     fn get_candidates_for_cell(grid: Grid, x: usize, y: usize) -> NumSet {

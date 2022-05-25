@@ -14,7 +14,7 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
     ];
     let mut is_validated = false;
 
-    while !puzzle.check_if_solved() {
+    while !puzzle.is_solved() {
         let mut progress = false;
         for tech in &techs {
             notify_applying_technique(tech);
@@ -27,7 +27,7 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
         }
     }
 
-    if puzzle.check_if_solved() {
+    if puzzle.is_solved() {
         is_validated = puzzle.validate_solution();
         if !is_validated {
             notify_solution_invalid();
