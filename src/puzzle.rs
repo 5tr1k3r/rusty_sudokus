@@ -3,14 +3,14 @@ use ahash::AHashSet;
 use cached::proc_macro::cached;
 use core::fmt;
 use counter::Counter;
+use fixedbitset::FixedBitSet;
 
 pub const SIZE: usize = 9;
 pub const BOX_SIZE: usize = 3;
 
-type NumSet = AHashSet<u8>;
 type IndexSet = AHashSet<(usize, usize)>;
-type Grid = [[u8; SIZE]; SIZE];
-type Candidates = [[NumSet; SIZE]; SIZE];
+type Grid = [[usize; SIZE]; SIZE];
+type Candidates = [[FixedBitSet; SIZE]; SIZE];
 
 pub struct Puzzle {
     grid: Grid,
@@ -95,7 +95,8 @@ fn get_all_box_indices() -> Vec<IndexSet> {
 
 impl Puzzle {
     fn new(grid: Grid) -> Self {
-        let mut candidates: Candidates = [(); SIZE].map(|_| [(); SIZE].map(|_| AHashSet::new()));
+        let mut candidates: Candidates =
+            [(); SIZE].map(|_| [(); SIZE].map(|_| FixedBitSet::with_capacity(SIZE + 1)));
         for y in 0..SIZE {
             for x in 0..SIZE {
                 if grid[y][x] == 0 {
@@ -113,7 +114,7 @@ impl Puzzle {
         for (i, value) in puzzle_string.chars().enumerate() {
             let x = i % SIZE;
             let y = i / SIZE;
-            grid[y][x] = value.to_digit(10).expect("Not a digit!") as u8;
+            grid[y][x] = value.to_digit(10).expect("Not a digit!") as usize;
         }
 
         Puzzle::new(grid)
@@ -123,15 +124,18 @@ impl Puzzle {
         !self.grid.iter().flatten().any(|&x| x == 0)
     }
 
-    fn get_candidates_for_cell(grid: Grid, x: usize, y: usize) -> NumSet {
-        let all_values: NumSet = (0..(SIZE + 1) as u8).into_iter().collect();
-        let rcb: NumSet = Puzzle::get_rcb(grid, x, y);
+    fn get_candidates_for_cell(grid: Grid, x: usize, y: usize) -> FixedBitSet {
+        // for SIZE 9: this produces `0111111111` which is a bitset of 1..=9
+        let mut all_values: FixedBitSet =
+            FixedBitSet::with_capacity_and_blocks(SIZE + 1, [(1 << (SIZE + 1)) - 2]);
+        let rcb: FixedBitSet = Puzzle::get_rcb(grid, x, y);
+        all_values.difference_with(&rcb);
 
-        &all_values - &rcb
+        all_values
     }
 
-    fn get_rcb(grid: Grid, x: usize, y: usize) -> NumSet {
-        let mut rcb_values = NumSet::new();
+    fn get_rcb(grid: Grid, x: usize, y: usize) -> FixedBitSet {
+        let mut rcb_values = FixedBitSet::with_capacity(SIZE + 1);
         for (i, j) in get_rcb_indices(x, y) {
             rcb_values.insert(grid[j][i]);
         }
@@ -139,35 +143,35 @@ impl Puzzle {
         rcb_values
     }
 
-    pub fn assign_value_to_cell(&mut self, value: u8, x: usize, y: usize) {
+    pub fn assign_value_to_cell(&mut self, value: usize, x: usize, y: usize) {
         if SOLVE_OUTPUT_ENABLED {
             println!("  found {} at position {}, {}", value, x, y);
         }
 
         self.grid[y][x] = value;
         self.remove_candidate_from_rcb(value, x, y);
-        self.candidates[y][x] = NumSet::new();
+        self.candidates[y][x].clear();
     }
 
-    fn remove_candidate_from_rcb(&mut self, value: u8, x: usize, y: usize) {
+    fn remove_candidate_from_rcb(&mut self, value: usize, x: usize, y: usize) {
         for (i, j) in get_rcb_indices(x, y) {
-            self.candidates[j][i].remove(&value);
+            self.candidates[j][i].set(value, false);
         }
     }
 
-    pub fn get_candidates_counter(&self, group: &IndexSet) -> Counter<u8> {
+    pub fn get_candidates_counter(&self, group: &IndexSet) -> Counter<usize> {
         let mut counter = Counter::new();
         for (x, y) in group {
-            counter.update(self.candidates[*y][*x].clone());
+            counter.update(self.candidates[*y][*x].ones());
         }
 
         counter
     }
 
-    pub fn get_candidates_indices_by_value(&self, value: u8, group: &IndexSet) -> IndexSet {
+    pub fn get_candidates_indices_by_value(&self, value: usize, group: &IndexSet) -> IndexSet {
         let mut result = IndexSet::new();
         for (x, y) in group {
-            if self.candidates[*y][*x].contains(&value) {
+            if self.candidates[*y][*x].contains(value) {
                 result.insert((*x, *y));
             }
         }
@@ -175,10 +179,10 @@ impl Puzzle {
         result
     }
 
-    fn get_values_by_group_indices(&self, group_indices: Vec<IndexSet>) -> Vec<NumSet> {
-        let mut result: Vec<NumSet> = Vec::new();
+    fn get_values_by_group_indices(&self, group_indices: Vec<IndexSet>) -> Vec<FixedBitSet> {
+        let mut result: Vec<FixedBitSet> = Vec::new();
         for group in group_indices {
-            let mut numset = NumSet::new();
+            let mut numset = FixedBitSet::with_capacity(SIZE + 1);
             for (x, y) in group {
                 numset.insert(self.grid[y][x]);
             }
@@ -188,27 +192,27 @@ impl Puzzle {
         result
     }
 
-    fn get_all_rows(&self) -> Vec<NumSet> {
+    fn get_all_rows(&self) -> Vec<FixedBitSet> {
         self.get_values_by_group_indices(get_all_row_indices())
     }
 
-    fn get_all_columns(&self) -> Vec<NumSet> {
+    fn get_all_columns(&self) -> Vec<FixedBitSet> {
         self.get_values_by_group_indices(get_all_column_indices())
     }
 
-    fn get_all_boxes(&self) -> Vec<NumSet> {
+    fn get_all_boxes(&self) -> Vec<FixedBitSet> {
         self.get_values_by_group_indices(get_all_box_indices())
     }
 
     pub fn validate_solution(&self) -> bool {
-        let all_groups: Vec<NumSet> = [
+        let all_groups: Vec<FixedBitSet> = [
             self.get_all_rows(),
             self.get_all_columns(),
             self.get_all_boxes(),
         ]
         .concat();
 
-        all_groups.iter().all(|x| x.len() == SIZE)
+        all_groups.iter().all(|x| x.count_ones(..) == SIZE)
     }
 }
 

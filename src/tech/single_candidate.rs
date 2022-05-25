@@ -14,8 +14,8 @@ impl Technique for SingleCandidate {
         for y in 0..SIZE {
             for x in 0..SIZE {
                 let cands = puzzle.candidates[y][x].clone();
-                if cands.len() == 1 {
-                    let value = *cands.iter().next().unwrap();
+                if cands.count_ones(..) == 1 {
+                    let value = cands.ones().next().unwrap();
                     puzzle.assign_value_to_cell(value, x, y);
                     is_progress = true;
                 }
