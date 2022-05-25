@@ -4,7 +4,7 @@ mod sudoku_solver;
 mod tech;
 
 use crate::puzzle::Puzzle;
-use crate::sudoku_solver::{batch_solve, solve};
+use crate::sudoku_solver::{batch_solve, batch_solve_everything, solve};
 use std::env;
 
 fn start_puzzle_solving_mode(puzzle_string: &str) {
@@ -18,7 +18,10 @@ fn start_puzzle_solving_mode(puzzle_string: &str) {
 
 fn start_batch_solving_mode(filename: &str) {
     println!("Batch solving mode");
-    batch_solve(filename);
+    match filename {
+        "all" => batch_solve_everything(),
+        _ => batch_solve(filename),
+    }
 }
 
 fn main() {

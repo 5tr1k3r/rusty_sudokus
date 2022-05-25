@@ -60,8 +60,7 @@ pub fn batch_solve(filename: &str) {
     println!("{}", result_string);
 }
 
-#[allow(dead_code)]
-fn batch_solve_everything() {
+pub fn batch_solve_everything() {
     let files = [
         "batches/0.txt",
         "batches/1.txt",
@@ -127,5 +126,6 @@ pub fn run_default() {
     println!("  -p <puzzle_string>     Solve a puzzle. Input: puzzle string.");
     println!("  Example: -p 030072001000030090518000003050203100000705306000640205200060014007000630000008900\n");
     println!("  -b <filename>          Solve a batch with puzzles. Input: filename.");
-    println!("  Example: -b 0.txt");
+    println!("  Example: -b batches/0.txt\n");
+    println!("  -b all                 Solve all batches.");
 }
