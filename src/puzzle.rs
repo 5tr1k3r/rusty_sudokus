@@ -214,12 +214,12 @@ impl Puzzle {
 
 impl fmt::Debug for Puzzle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "\n").expect("Couldn't write newline!");
+        writeln!(f).expect("Couldn't write newline!");
         for y in 0..SIZE {
             for x in 0..SIZE {
                 write!(f, "{} ", self.grid[y][x]).expect("Couldn't write a cell");
             }
-            write!(f, "\n").expect("Couldn't write newline!");
+            writeln!(f).expect("Couldn't write newline!");
         }
 
         write!(f, "")
@@ -232,7 +232,7 @@ pub fn run() {
     let pstring: &str =
         "030072001000030090518000003050203100000705306000640205200060014007000630000008900";
 
-    let my_puzzle = Puzzle::from_string(&pstring);
+    let my_puzzle = Puzzle::from_string(pstring);
 
     dbg!(my_puzzle.candidates);
 }

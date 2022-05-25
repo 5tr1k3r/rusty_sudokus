@@ -21,7 +21,7 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
             progress = tech.apply(puzzle) || progress;
         }
 
-        if progress == false {
+        if !progress {
             notify_no_progress();
             break;
         }
@@ -38,7 +38,7 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
 }
 
 fn solve_puzzle_by_string(puzzle_string: &str) -> bool {
-    let mut puzzle = Puzzle::from_string(&puzzle_string);
+    let mut puzzle = Puzzle::from_string(puzzle_string);
     solve(&mut puzzle)
 }
 
@@ -50,7 +50,7 @@ pub fn batch_solve(filename: &str) {
     let total_count: usize = all_puzzles.lines().count();
     let unsolved_count: usize = all_puzzles
         .par_lines()
-        .map(|pstring| solve_puzzle_by_string(pstring))
+        .map(solve_puzzle_by_string)
         .filter(|x| !x)
         .count();
 
@@ -69,7 +69,7 @@ pub fn batch_solve_everything() {
         "batches/5.txt",
     ];
     for file in files {
-        batch_solve(&file);
+        batch_solve(file);
     }
 }
 
