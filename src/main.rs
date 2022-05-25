@@ -7,7 +7,7 @@ use crate::puzzle::Puzzle;
 use crate::sudoku_solver::{batch_solve, solve};
 use std::env;
 
-fn start_puzzle_solving_mode(puzzle_string: &String) {
+fn start_puzzle_solving_mode(puzzle_string: &str) {
     println!("Puzzle solving mode");
     let mut my_puzzle = Puzzle::from_string(puzzle_string);
 
@@ -16,7 +16,7 @@ fn start_puzzle_solving_mode(puzzle_string: &String) {
     dbg!(my_puzzle);
 }
 
-fn start_batch_solving_mode(filename: &String) {
+fn start_batch_solving_mode(filename: &str) {
     println!("Batch solving mode");
     batch_solve(filename);
 }
@@ -34,11 +34,9 @@ fn main() {
     let mode = &optional_args[0];
     let object = &optional_args[1];
 
-    if mode == "-p" {
-        start_puzzle_solving_mode(object)
-    } else if mode == "-b" {
-        start_batch_solving_mode(object)
-    } else {
-        panic!("Unexpected argument(s)");
+    match mode.as_str() {
+        "-p" => start_puzzle_solving_mode(object),
+        "-b" => start_batch_solving_mode(object),
+        _ => panic!("Unexpected argument(s)"),
     }
 }

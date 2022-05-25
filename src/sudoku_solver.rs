@@ -38,11 +38,11 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
 }
 
 fn solve_puzzle_by_string(puzzle_string: &str) -> bool {
-    let mut puzzle = Puzzle::from_string(&puzzle_string.to_string());
+    let mut puzzle = Puzzle::from_string(&puzzle_string);
     solve(&mut puzzle)
 }
 
-pub fn batch_solve(filename: &String) {
+pub fn batch_solve(filename: &str) {
     let all_puzzles = fs::read_to_string(filename).expect("File reading error");
 
     let time_start = Instant::now();
@@ -70,12 +70,12 @@ fn batch_solve_everything() {
         "batches/5.txt",
     ];
     for file in files {
-        batch_solve(&file.to_string());
+        batch_solve(&file);
     }
 }
 
 fn construct_result_string(
-    filename: &String,
+    filename: &str,
     total_count: usize,
     unsolved_count: usize,
     time_taken: f64,
@@ -112,16 +112,15 @@ fn notify_solution_invalid() {
 }
 
 pub fn run_default() {
-    // let pstring: String =
-    //     "030072001000030090518000003050203100000705306000640205200060014007000630000008900"
-    //         .to_string();
+    // let pstring: &str =
+    //     "030072001000030090518000003050203100000705306000640205200060014007000630000008900";
     // let mut my_puzzle = Puzzle::from_string(pstring);
 
     // solve(&mut my_puzzle);
 
     // dbg!(my_puzzle);
 
-    // batch_solve("batches/5.txt".to_string());
+    // batch_solve("batches/5.txt");
     // batch_solve_everything();
 
     println!("Available commands:");

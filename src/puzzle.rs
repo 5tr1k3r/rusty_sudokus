@@ -107,7 +107,7 @@ impl Puzzle {
         Self { grid, candidates }
     }
 
-    pub fn from_string(puzzle_string: &String) -> Self {
+    pub fn from_string(puzzle_string: &str) -> Self {
         assert_eq!(puzzle_string.len(), SIZE * SIZE);
         let mut grid: Grid = [[0; SIZE]; SIZE];
         for (i, value) in puzzle_string.chars().enumerate() {
@@ -235,9 +235,8 @@ impl fmt::Debug for Puzzle {
 #[allow(dead_code)]
 pub fn run() {
     println!("Hello, you are running the puzzle module!");
-    let pstring: String =
-        "030072001000030090518000003050203100000705306000640205200060014007000630000008900"
-            .to_string();
+    let pstring: &str =
+        "030072001000030090518000003050203100000705306000640205200060014007000630000008900";
 
     let my_puzzle = Puzzle::from_string(&pstring);
 
