@@ -9,11 +9,11 @@ use std::env;
 
 fn start_puzzle_solving_mode(puzzle_string: &str) {
     println!("Puzzle solving mode");
-    let mut my_puzzle = Puzzle::from_string(puzzle_string);
+    let my_puzzle = Puzzle::from_string(puzzle_string);
 
-    solve(&mut my_puzzle);
+    solve(my_puzzle);
 
-    dbg!(my_puzzle);
+    // dbg!(my_puzzle);
 }
 
 fn start_batch_solving_mode(filename: &str) {

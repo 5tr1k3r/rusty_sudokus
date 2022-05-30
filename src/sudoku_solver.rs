@@ -7,7 +7,36 @@ use rayon::prelude::*;
 use std::fs;
 use std::time::Instant;
 
-pub fn solve(puzzle: &mut Puzzle) -> bool {
+pub fn solve(original_puzzle: Puzzle) -> bool {
+    let mut queue: Vec<Puzzle> = vec![original_puzzle];
+
+    while !queue.is_empty() {
+        let mut puzzle = queue.pop().unwrap();
+
+        if solve_logically(&mut puzzle) {
+            notify_puzzle_solved();
+            return true
+        }
+
+        if puzzle.is_impossible() {
+            notify_puzzle_impossible();
+            continue;
+        }
+
+        let (x, y) = puzzle.find_cell_with_fewest_candidates();
+        notify_picking_cell_to_bruteforce(x, y);
+
+        for cand in puzzle.candidates[y][x].ones() {
+            let mut new_puzzle: Puzzle = puzzle.copy();
+            new_puzzle.assign_value_to_cell(cand, x, y);
+            queue.push(new_puzzle);
+        }
+    }
+
+    false
+}
+
+pub fn solve_logically(puzzle: &mut Puzzle) -> bool {
     let techs: Vec<Box<dyn Technique>> = vec![
         Box::new(SingleCandidate) as Box<dyn Technique>,
         Box::new(HiddenSingle) as _,
@@ -38,8 +67,8 @@ pub fn solve(puzzle: &mut Puzzle) -> bool {
 }
 
 fn solve_puzzle_by_string(puzzle_string: &str) -> bool {
-    let mut puzzle = Puzzle::from_string(puzzle_string);
-    solve(&mut puzzle)
+    let puzzle = Puzzle::from_string(puzzle_string);
+    solve(puzzle)
 }
 
 pub fn batch_solve(filename: &str) {
@@ -110,14 +139,30 @@ fn notify_solution_invalid() {
     println!("Solution is invalid!");
 }
 
+fn notify_puzzle_impossible() {
+    if SOLVE_OUTPUT_ENABLED {
+        println!("Puzzle is impossible to solve!");
+    }
+}
+
+fn notify_puzzle_solved() {
+    if SOLVE_OUTPUT_ENABLED {
+        println!("Puzzle solved");
+    }
+}
+
+fn notify_picking_cell_to_bruteforce(x: usize, y: usize) {
+    if SOLVE_OUTPUT_ENABLED {
+        println!("Going to pick cell {}, {} and bruteforce from there", x, y);
+    }
+}
+
 pub fn run_default() {
     // let pstring: &str =
     //     "030072001000030090518000003050203100000705306000640205200060014007000630000008900";
     // let mut my_puzzle = Puzzle::from_string(pstring);
 
-    // solve(&mut my_puzzle);
-
-    // dbg!(my_puzzle);
+    // solve(my_puzzle);
 
     // batch_solve("batches/5.txt");
     // batch_solve_everything();
