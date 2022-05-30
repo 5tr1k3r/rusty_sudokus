@@ -108,6 +108,21 @@ impl Puzzle {
         Self { grid, candidates }
     }
 
+    pub fn copy(&self) -> Self {
+        let mut new_grid: Grid = [[0; SIZE]; SIZE];
+        let mut new_candidates: Candidates = 
+            [(); SIZE].map(|_| [(); SIZE].map(|_| FixedBitSet::with_capacity(SIZE + 1)));
+        
+        for y in 0..SIZE {
+            for x in 0..SIZE {
+                new_grid[y][x] = self.grid[y][x];
+                new_candidates[y][x] = self.candidates[y][x].clone();
+            }
+        }
+
+        Self { grid: new_grid, candidates: new_candidates }
+    }
+
     pub fn from_string(puzzle_string: &str) -> Self {
         assert_eq!(puzzle_string.len(), SIZE * SIZE);
         let mut grid: Grid = [[0; SIZE]; SIZE];
@@ -213,6 +228,44 @@ impl Puzzle {
         .concat();
 
         all_groups.iter().all(|x| x.count_ones(..) == SIZE)
+    }
+
+    pub fn is_impossible(&self) -> bool {
+        for y in 0..SIZE {
+            for x in 0..SIZE {
+                if self.grid[y][x] == 0 && self.candidates[y][x].count_ones(..) == 0 {
+                    return true
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn find_cell_with_fewest_candidates(&self) -> (usize, usize) {
+        let mut min_cands = SIZE;
+        let mut min_x = 0;
+        let mut min_y = 0;
+
+        for (y, row) in self.candidates.iter().enumerate() {
+            for (x, cands) in row.iter().enumerate() {
+                let length = cands.count_ones(..);
+
+                if length != 0 {
+                    if length == 2 {
+                        return (x, y)
+                    }
+
+                    if length < min_cands {
+                        min_cands = length;
+                        min_x = x;
+                        min_y = y;
+                    }
+                }
+            }
+        }
+
+        (min_x, min_y)
     }
 }
 
